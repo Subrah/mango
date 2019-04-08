@@ -213,6 +213,32 @@
   </div>
   <% end %>
 
+  <div class="report-content">
+    <h2 onclick="toggle_report_details('#consumption_variation_per_batch_plot')">Gráfico de Variación de Consumo de Materia Prima vs N° de Batch</h2>
+    <div id="consumption_variation_per_batch_plot" class="report-details">
+      <%= form_for(:report, :url=>consumption_variation_per_batch_plot_report_path, html: {target: "_blank"}) do |f| %>
+        <%= f.label :start_datetime, "Fecha Inicio: ", :class=>'small' %> <%= f.datetime_select :start, :ampm => true, :default => @default_start_datetime %><br/>
+        <%= f.label :end_datetime, "Fecha Fin: ", :class=>'small' %> <%= f.datetime_select :end, :ampm => true, :default => @default_end_datetime %><br/><br/>
+        <%= f.label :ingredient_id, "ingrediente", :class=>'small' %>
+        <%= f.collection_select :ingredient_id, @ingredients, :id, :to_collection_select, {include_blank: false}, class: 'chosen-select chzn-field-normal' %><br/><br/><br/>
+        <%= submit_tag 'Generar Reporte' %>
+      <% end %>
+    </div>
+  </div>
+  
+  <div class="report-content">
+    <h2 onclick="toggle_report_details('#order_consumption_variation_per_batch_plot')">Gráfico de Variación de Consumo de Materia Prima vs N° de Batch por Orden de Producción</h2>
+    <div id="order_consumption_variation_per_batch_plot" class="report-details">
+      <%= form_for(:report, :url=>order_consumption_variation_per_batch_plot_report_path, html: {target: "_blank"}) do |f| %>
+        <%= f.label :ingredient_id, "ingrediente", :class=>'small' %>
+        <%= f.collection_select :ingredient_id, @ingredients, :id, :to_collection_select, {include_blank: false}, class: 'chosen-select chzn-field-normal' %><br/><br/><br/>
+        <%= f.label :order_id, "orden", :class=>'small' %>
+        <%= f.collection_select :order_id, @orders, :id, :to_collection_select, {include_blank: false}, class: 'chosen-select chzn-field-normal' %><br/><br/><br/>
+        <%= submit_tag 'Generar Reporte' %>
+      <% end %>
+    </div>
+  </div>
+
   <% if session[:reports_permissions].include?('alarms') %>
   <div class="report-content">
     <h2 onclick="toggle_report_details('#alarms')">Alarmas</h2>

@@ -1,0 +1,15 @@
+report.set_layout tlf: 'reports/thinreports_layouts/consumption_variation_per_batch_plot'
+
+report.start_new_page do |page|
+  page.values company_name: @data['company_name']
+  page.values company_address: @data['company_address']
+  page.values company_rif: @data['company_rif']
+  page.values company_logo: @data['company_logo']
+  page.values since: @data[:since]
+  page.values until: @data[:until]
+  page.values ingredient: @data[:ingredient]
+  page.values order_numbers: @data[:order_numbers]
+  page.values order_codes: @data[:order_codes]
+  
+  page.values plot: @data[:plot_path]
+end

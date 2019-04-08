@@ -165,6 +165,7 @@ Permission.create("name"=>"Reporte Movimientos de Romana por Mat. Prima / Prod. 
 Permission.create("name"=>"Reporte Movimientos de Romana por Transportista", "module"=>"reports", "action"=>"tickets_transactions_per_carrier", "mode"=>"global")
 Permission.create("name"=>"Reporte Movimientos de Romana por Chofer", "module"=>"reports", "action"=>"tickets_transactions_per_driver", "mode"=>"global")
 Permission.create("name"=>"Reporte Nota de Producción", "module"=>"reports", "action"=>"production_note", "mode"=>"global")
+Permission.create("name"=>"Reporte Gráfico de Variación de Consumo vs N° de Batch por Mat. Prima", "module"=>"reports", "action"=>"consumption_variation_per_batch_plot", "mode"=>"global")
 
 Permission.create("name"=>"SCADA Generar Consumo", "module"=>"orders", "action"=>"generate_consumption", "mode"=>"global")
 Permission.create("name"=>"SCADA Generar consumos no pesados", "module"=>"orders", "action"=>"generate_not_weighed_consumptions", "mode"=>"global")

@@ -16,6 +16,7 @@ class ReportsController < ApplicationController
     @recipes_all = Recipe.where(active: true, in_use: true)
     @units = OrderStatType::UNITS.select {|key, value| OrderStatType.group(:unit).pluck(:unit).include?(key)}
     @ingredients = Ingredient.actives.all
+    @orders = Order.all
     @products = Product.all
     @lots = Lot.includes(:ingredient).where(active: true).order('id desc')
     @default_start_datetime = Time.now - (60*60*Time.now.hour) - (60*Time.now.min)
@@ -574,6 +575,33 @@ class ReportsController < ApplicationController
     end
   end
 
+  def consumption_variation_per_batch_plot
+    @data = EasyModel.consumption_variation_per_batch_plot(params[:report])
+    if @data.nil?
+      flash[:notice] = 'No hay registros para generar el reporte'
+      flash[:type] = 'warn'
+      redirect_to reports_path
+    else
+      rendered = render_to_string formats: [:pdf],
+                                  template: 'reports/consumption_variation_per_batch_plot'
+      send_data rendered, filename: "#{@data['title']}.pdf",
+                          type: 'application/pdf', disposition: 'inline'
+    end
+  end
+
+  def order_consumption_variation_per_batch_plot
+    @data = EasyModel.order_consumption_variation_per_batch_plot(params[:report])
+    if @data.nil?
+      flash[:notice] = 'No hay registros para generar el reporte'
+      flash[:type] = 'warn'
+      redirect_to reports_path
+    else
+      rendered = render_to_string formats: [:pdf],
+                                  template: 'reports/order_consumption_variation_per_batch_plot'
+      send_data rendered, filename: "#{@data['title']}.pdf",
+                          type: 'application/pdf', disposition: 'inline'
+    end
+  end
 end
 
 

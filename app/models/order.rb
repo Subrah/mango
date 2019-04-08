@@ -36,6 +36,10 @@ class Order < ActiveRecord::Base
     2 => {name: 'Notificadas', condition: 'completed = TRUE AND notified = TRUE'},
   }
 
+  def to_collection_select
+    "#{self.code} - #{self.recipe.name}"
+  end
+
   def product_lot_factory
     if self.client_id and self.product_lot_id and not self.auto_product_lot
       if self.client.factory and not self.product_lot.client_id == self.client_id

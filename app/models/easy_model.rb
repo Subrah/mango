@@ -1,5 +1,7 @@
 include MangoModule
 
+require 'gruff'
+
 class EasyModel
   def self.production_note(params)
     n_batch = params[:n_batch].to_i
@@ -2141,6 +2143,142 @@ adjustments = []
 
   end
 
+  def self.consumption_variation_per_batch_plot(params)
+    start_date = self.param_to_datetime(params, 'start')
+    end_date = self.param_to_datetime(params, 'end')
+
+    ingredient = Ingredient.where(id: params[:ingredient_id]).first
+    return nil if ingredient.nil?
+
+    orders = Order.joins({batch: {batch_hopper_lot: {hopper_lot: {lot: {}}}}})
+                  .select('batches.number AS batch_number,
+                          batch_hoppers_lots.amount AS real_amount,
+                          batch_hoppers_lots.standard_amount AS std_amount,
+                          orders.code AS order_code')
+                  .where({batches: {start_date: start_date .. end_date},
+                          lots: {ingredient_id: ingredient.id}})
+                  .order('batches.number')
+    return nil if orders.nil?
+
+
+    # batch_hopper_lots = BatchHopperLot
+    # .joins({batch: {order: {recipe: {}}}, hopper_lot: {lot: {}}})
+    # .select('batches.number AS batch_number,
+    #          amount AS real_amount,
+    #          standard_amount AS std_amount,
+    #          orders.code AS order_code')
+    # .where({batches: {start_date: start_date .. end_date},
+    #         lots: {ingredient_id: ingredient.id}})
+    # .order('batches.number')
+    # return nil if batch_hopper_lots.nil?
+
+    data = self.initialize_data("")
+    data[:since] = self.print_range_date(start_date)
+    data[:until] = self.print_range_date(end_date)
+    data[:ingredient] = "#{ingredient.code} - #{ingredient.name}"
+    data[:plot_path] = "#{Rails.root}/tmp/consumption_variation_per_batch_plot.png"
+    
+    order_codes = []
+    order_number_hash = {}
+    batch_numbers = {}
+    consumption_variations = []
+    order_number = 1
+    
+    orders.each_with_index do |order, index|
+      batch_number = order[:batch_number]
+      order_code = order[:order_code]
+      order_codes << order_code
+      
+      batch_numbers[index] = "#{batch_number}\n(#{order_number})"
+      order_number_hash[order_number] = order_code
+      order_number += 1 if order_codes[-1] != order_codes[-2]
+      
+      var_kg = order[:real_amount] - order[:std_amount]
+      var_perc = order[:std_amount] == 0 ? 100 : (var_kg * 100) / order[:std_amount]
+      consumption_variations << var_perc.round(2)
+    end
+    
+    data[:order_numbers] = "#{order_number_hash.map{|k,v| "#{k}"}.join("\n")}"
+    data[:order_codes] = "#{order_number_hash.map{|k,v| "#{v}"}.join("\n")}"
+
+    g = Gruff::Line.new(1000)
+    g.title = "Variación de Consumo de Materia Prima vs N° de Batch"
+    g.title_font_size = 20
+    g.hide_legend = true
+    g.theme = {
+      :colors => %w('#3a5b87' 'grey' 'blue' 'orange' 'black' 'green' 'red' 'purple'),
+      :marker_color => 'grey',
+      :font_color => 'black',
+      :background_colors => 'white'
+    }
+    g.marker_font_size = 18
+    g.line_width = 2
+    g.dot_radius = 4
+    # g.x_axis_label = "Número de Batch\n(N° de Orden)"
+    g.y_axis_label = 'Var (%)'
+
+    g.data("Variación", consumption_variations)
+    g.labels = batch_numbers
+    g.write(data[:plot_path])
+
+    data
+  end
+
+  def self.order_consumption_variation_per_batch_plot(params)
+    order = Order.where(id: params[:order_id]).first
+    ingredient = Ingredient.where(id: params[:ingredient_id]).first
+    return nil if ingredient.nil? || order.nil?
+
+    batch_hopper_lots = BatchHopperLot
+    .joins({batch: {order: {recipe: {}}}, hopper_lot: {lot: {}}})
+    .select('batches.number AS batch_number,
+             orders.code AS order_code,
+             amount AS real_amount,
+             standard_amount AS std_amount')
+    .where(lots: {ingredient_id: ingredient.id},
+           orders: {id: order.id})
+    return nil if batch_hopper_lots.nil?
+
+    data = self.initialize_data("")
+    data[:ingredient] = "#{ingredient.code} - #{ingredient.name}"
+    data[:order] = "#{order.code} - #{order.recipe.name}"
+    data[:plot_path] = "#{Rails.root}/tmp/order_consumption_variation_per_batch_plot.png"
+    batch_numbers = {}
+    consumption_variations = []
+
+    batch_hopper_lots.each_with_index do |bhl, index|
+      var_kg = bhl[:real_amount] - bhl[:std_amount]
+      var_perc = bhl[:std_amount] == 0 ? 100 : (var_kg * 100) / bhl[:std_amount]
+      consumption_variations << var_perc.round(2)
+      
+      batch_number = bhl[:batch_number]
+      batch_numbers[index] = batch_number
+    end
+
+    g = Gruff::Line.new(1000)
+    g.title = "Variación de Consumo de Materia Prima vs N° de batch por Orden"
+    g.title_font_size = 20
+    g.hide_legend = true
+    g.theme = {
+      :colors => %w('#3a5b87' '#999999'),
+      :marker_color => 'grey',
+      :font_color => 'black',
+      :background_colors => 'white'
+    }
+    g.marker_font_size = 18
+    g.line_width = 2
+    g.dot_radius = 4
+
+    g.x_axis_label = 'Número de Batch'
+    g.y_axis_label = 'Var (%)'
+
+    g.labels = batch_numbers
+    g.data('Variación', consumption_variations)
+    g.write(data[:plot_path])
+    
+    data
+  end
+       
   # ================================================================
   # Utilities
   # ================================================================
