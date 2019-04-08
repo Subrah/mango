@@ -2173,8 +2173,8 @@ adjustments = []
     # return nil if batch_hopper_lots.nil?
 
     data = self.initialize_data("")
-    data[:since] = self.print_range_date(start_date)
-    data[:until] = self.print_range_date(end_date)
+    data[:since] = self.print_range_date(start_date, true)
+    data[:until] = self.print_range_date(end_date, true)
     data[:ingredient] = "#{ingredient.code} - #{ingredient.name}"
     data[:plot_path] = "#{Rails.root}/tmp/consumption_variation_per_batch_plot.png"
     
@@ -2226,6 +2226,7 @@ adjustments = []
 
   def self.order_consumption_variation_per_batch_plot(params)
     order = Order.where(id: params[:order_id]).first
+    date = order.created_at
     ingredient = Ingredient.where(id: params[:ingredient_id]).first
     return nil if ingredient.nil? || order.nil?
 
@@ -2243,6 +2244,7 @@ adjustments = []
     data[:ingredient] = "#{ingredient.code} - #{ingredient.name}"
     data[:order] = "#{order.code} - #{order.recipe.name}"
     data[:plot_path] = "#{Rails.root}/tmp/order_consumption_variation_per_batch_plot.png"
+    data[:date] = self.print_range_date(date, true)
     batch_numbers = {}
     consumption_variations = []
 
